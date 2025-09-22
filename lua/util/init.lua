@@ -4,10 +4,8 @@ local LazyUtil = require "lazy.core.util"
 ---@field treesitter lazyvim.util.treesitter
 ---@field lsp lazyvim.util.lsp
 ---@field root lazyvim.util.root
----@field format lazyvim.util.format
 ---@field extras lazyvim.util.extras
 ---@field mini lazyvim.util.mini
----@field pick lazyvim.util.pick
 ---@field cmp lazyvim.util.cmp
 ---@field deprecated lazyvim.util.deprecated
 local M = {}

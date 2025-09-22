@@ -123,9 +123,6 @@ return {
     end,
     ---@param opts PluginLspOpts
     config = vim.schedule_wrap(function(_, opts)
-      -- setup autoformat
-      LazyVim.format.register(LazyVim.lsp.formatter())
-
       local api = vim.api
 
       local function check_triggeredChars(triggerChars)
@@ -168,8 +165,7 @@ return {
         })
       end
 
-      -- setup autoformat
-      LazyVim.format.register(LazyVim.lsp.formatter())
+      
 
       -- setup keymaps
       LazyVim.lsp.on_attach(function(client, buffer)
@@ -418,8 +414,7 @@ return {
             filter = "eslint",
           }
 
-          -- register the formatter with LazyVim
-          LazyVim.format.register(formatter)
+          
         end,
       },
     },
