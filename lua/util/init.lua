@@ -7,21 +7,15 @@ local LazyUtil = require "lazy.core.util"
 ---@field extras lazyvim.util.extras
 ---@field mini lazyvim.util.mini
 ---@field cmp lazyvim.util.cmp
----@field deprecated lazyvim.util.deprecated
 local M = {}
-M.deprecated = require "util.deprecated"
 
 setmetatable(M, {
   __index = function(t, k)
     if LazyUtil[k] then
       return LazyUtil[k]
     end
-    if M.deprecated[k] then
-      return M.deprecated[k]()
-    end
     ---@diagnostic disable-next-line: no-unknown
     t[k] = require("util." .. k)
-    M.deprecated.decorate(k, t[k])
     return t[k]
   end,
 })

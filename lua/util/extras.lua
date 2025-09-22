@@ -1,4 +1,4 @@
----@class util.extras
+---@class lazyvim.util.extras
 local M = {}
 
 ---@alias WantsOpts {ft?: string|string[]}
