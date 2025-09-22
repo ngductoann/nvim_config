@@ -73,13 +73,13 @@ return {
     keys = require("configs.editor.mini-files").keys,
   },
 
-  {
-    "RRethy/vim-illuminate",
-    event = "User FilePost",
-    opts = require("configs.editor.vim-illuminate").opts,
-    config = require("configs.editor.vim-illuminate").config,
-    keys = require("configs.editor.vim-illuminate").keys,
-  },
+  -- {
+  --   "RRethy/vim-illuminate",
+  --   event = "User FilePost",
+  --   opts = require("configs.editor.vim-illuminate").opts,
+  --   config = require("configs.editor.vim-illuminate").config,
+  --   keys = require("configs.editor.vim-illuminate").keys,
+  -- },
 
   {
     "nvim-mini/mini.bufremove",

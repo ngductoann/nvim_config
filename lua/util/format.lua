@@ -24,10 +24,10 @@ function M.register(formatter)
 end
 
 function M.formatexpr()
-  if LazyVim.has "conform.nvim" then
+  if LazyVim.has("conform.nvim") then
     return require("conform").formatexpr()
   end
-  return vim.lsp.formatexpr { timeout_ms = 3000 }
+  return vim.lsp.formatexpr({ timeout_ms = 3000 })
 end
 
 ---@param buf? number
@@ -139,11 +139,11 @@ function M.format(opts)
 end
 
 function M.health()
-  local Config = require "lazy.core.config"
+  local Config = require("lazy.core.config")
   local has_plugin = Config.spec.plugins["none-ls.nvim"]
   local has_extra = vim.tbl_contains(Config.spec.modules, "lazyvim.plugins.extras.lsp.none-ls")
   if has_plugin and not has_extra then
-    LazyVim.warn {
+    LazyVim.warn({
       "`conform.nvim` and `nvim-lint` are now the default formatters and linters in LazyVim.",
       "",
       "You can use those plugins together with `none-ls.nvim`,",
@@ -151,7 +151,7 @@ function M.health()
       "for formatting to work correctly.",
       "",
       "In case you no longer want to use `none-ls.nvim`, just remove the spec from your config.",
-    }
+    })
   end
 end
 
@@ -162,19 +162,35 @@ function M.setup()
   vim.api.nvim_create_autocmd("BufWritePre", {
     group = vim.api.nvim_create_augroup("LazyFormat", {}),
     callback = function(event)
-      M.format { buf = event.buf }
+      M.format({ buf = event.buf })
     end,
   })
 
   -- Manual format
   vim.api.nvim_create_user_command("LazyFormat", function()
-    M.format { force = true }
+    M.format({ force = true })
   end, { desc = "Format selection or buffer" })
 
   -- Format info
   vim.api.nvim_create_user_command("LazyFormatInfo", function()
     M.info()
   end, { desc = "Show info about the formatters for the current buffer" })
+end
+
+---@param buf? boolean
+function M.snacks_toggle(buf)
+  return Snacks.toggle({
+    name = "Auto Format (" .. (buf and "Buffer" or "Global") .. ")",
+    get = function()
+      if not buf then
+        return vim.g.autoformat == nil or vim.g.autoformat
+      end
+      return LazyVim.format.enabled()
+    end,
+    set = function(state)
+      LazyVim.format.enable(state, buf)
+    end,
+  })
 end
 
 return M

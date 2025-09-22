@@ -254,12 +254,23 @@ return {
 
       vim.lsp.config("*", {
         capabilities = capabilities,
-        on_init = function(client, _)
-          if client.supports_method "textDocument/semanticTokens" then
-            client.server_capabilities.semanticTokensProvider = nil
-          end
-        end,
+        -- on_init = function(client, _)
+        --   if client.supports_method "textDocument/semanticTokens" then
+        --     client.server_capabilities.semanticTokensProvider = nil
+        --   end
+        -- end,
       })
+
+      -- Lưu handler mặc định
+      local default_signature_help = vim.lsp.handlers["textDocument/signatureHelp"]
+
+      -- Override để chặn notify rác
+      vim.lsp.handlers["textDocument/signatureHelp"] = function(err, result, ctx, config)
+        if err or not (result and result.signatures and result.signatures[1]) then
+          return
+        end
+        return default_signature_help(err, result, ctx, config)
+      end
 
       -- get all the servers that are available through mason-lspconfig
       local have_mason = LazyVim.has "mason-lspconfig.nvim"

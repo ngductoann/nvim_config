@@ -116,24 +116,43 @@ map("n", "<leader>bd", function()
   bufremove.delete(0, false)
 end, { desc = "buffer close" })
 
--- close other buffers
 map("n", "<leader>bo", function()
   local cur = vim.api.nvim_get_current_buf()
-  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_loaded(buf) and buf ~= cur then
-      bufremove.delete(buf, false)
-    end
-  end
-end, { desc = "buffer other close" })
 
--- close all buffers
-map("n", "<leader>bO", function()
+  -- đảm bảo mọi window hiển thị cur trước khi xóa
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    vim.api.nvim_win_set_buf(win, cur)
+  end
+
+  -- xóa buffer khác
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_loaded(buf) then
-      bufremove.delete(buf, false)
+    if buf ~= cur and vim.api.nvim_buf_is_loaded(buf) then
+      require("mini.bufremove").delete(buf, true)
     end
   end
-end, { desc = "buffer all close" })
+end, { desc = "close other buffers + windows" })
+
+map("n", "<leader>bO", function()
+  -- mở một buffer trống để giữ lại
+  vim.cmd "enew"
+
+  -- lấy danh sách tất cả window hiện có (trừ current)
+  local cur_win = vim.api.nvim_get_current_win()
+
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if win ~= cur_win then
+      vim.api.nvim_win_close(win, true)
+    end
+  end
+
+  -- xoá toàn bộ buffer khác (trừ cái vừa enew)
+  local cur_buf = vim.api.nvim_get_current_buf()
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if buf ~= cur_buf and vim.api.nvim_buf_is_loaded(buf) then
+      pcall(vim.api.nvim_buf_delete, buf, { force = false })
+    end
+  end
+end, { desc = "close all buffers, keep one empty window" })
 
 -- Comment
 map("n", "<leader>/", "gcc", { desc = "toggle comment", remap = true })

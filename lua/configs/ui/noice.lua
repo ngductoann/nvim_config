@@ -1,16 +1,16 @@
 return {
   opts = {
-    cmdline = {
-      view = "cmdline",
-    },
-    notify = {
-      enabled = false,
-    },
     lsp = {
       override = {
         ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
         ["vim.lsp.util.stylize_markdown"] = true,
         ["cmp.entry.get_documentation"] = true,
+      },
+      signature = {
+        enabled = true,
+        auto_open = {
+          enabled = false,
+        },
       },
     },
     routes = {
@@ -24,6 +24,14 @@ return {
           },
         },
         view = "mini",
+      },
+      -- ✨ chặn notify "No signature help available"
+      {
+        filter = {
+          event = "notify",
+          find = "No signature help available",
+        },
+        opts = { skip = true },
       },
     },
     presets = {
