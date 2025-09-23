@@ -54,7 +54,15 @@ return {
         folds = {
           enabled = true,
         },
-
+        -- add any global capabilities here
+        capabilities = {
+          workspace = {
+            fileOperations = {
+              didRename = true,
+              willRename = true,
+            },
+          },
+        },
         -- options for vim.lsp.buf.format
         -- `bufnr` and `filter` is handled by the LazyVim formatter,
         -- but can be also overridden when specified
@@ -63,11 +71,9 @@ return {
           timeout_ms = nil,
         },
         -- LSP Server Settings
-        ---@type table<string, vim.lsp.Config|{mason?:boolean, enabled?:boolean}|boolean>
+        ---@alias lazyvim.lsp.Config vim.lsp.Config|{mason?:boolean, enabled?:boolean}
+        ---@type table<string, lazyvim.lsp.Config|boolean>
         servers = {
-          bashls = {},
-          html = {},
-          emmet_ls = {},
           lua_ls = {
             -- mason = false, -- set to false if you don't want this server to be installed with mason
             -- Use this to add any additional keymaps
@@ -76,7 +82,6 @@ return {
             -- keys = {},
             settings = {
               Lua = {
-                runtime = { version = "LuaJIT" },
                 workspace = {
                   checkThirdParty = false,
                   library = {
@@ -138,7 +143,7 @@ return {
         end
       end
 
-      local setup = function(client, bufnr)
+      local setup_signature = function(client, bufnr)
         -- check if server supports signatureHelp
         if
           not (
@@ -168,12 +173,7 @@ return {
       -- setup keymaps
       LazyVim.lsp.on_attach(function(client, buffer)
         require("plugins.lsp.keymaps").on_attach(client, buffer)
-        setup(client, buffer)
-      end)
-
-      -- setup keymaps
-      LazyVim.lsp.on_attach(function(client, buffer)
-        require("plugins.lsp.keymaps").on_attach(client, buffer)
+        setup_signature(client, buffer)
       end)
 
       LazyVim.lsp.setup()
@@ -215,8 +215,8 @@ return {
       -- diagnostics
       if type(opts.diagnostics.virtual_text) == "table" and opts.diagnostics.virtual_text.prefix == "icons" then
         opts.diagnostics.virtual_text.prefix = function(diagnostic)
-          local diagnostics = icons.diagnostics
-          for d, icon in pairs(diagnostics) do
+          local icons = LazyVim.config.icons.diagnostics
+          for d, icon in pairs(icons) do
             if diagnostic.severity == vim.diagnostic.severity[d:upper()] then
               return icon
             end
@@ -249,29 +249,18 @@ return {
 
       vim.lsp.config("*", {
         capabilities = capabilities,
-        on_init = function(client, _)
-          if vim.fn.has "nvim-0.11" ~= 1 then
-            if client.supports_method "textDocument/semanticTokens" then
-              client.server_capabilities.semanticTokensProvider = nil
-            end
-          else
-            if client:supports_method "textDocument/semanticTokens" then
-              client.server_capabilities.semanticTokensProvider = nil
-            end
-          end
-        end,
+        -- on_init = function(client, _)
+        --   if vim.fn.has "nvim-0.11" ~= 1 then
+        --     if client.supports_method "textDocument/semanticTokens" then
+        --       client.server_capabilities.semanticTokensProvider = nil
+        --     end
+        --   else
+        --     if client:supports_method "textDocument/semanticTokens" then
+        --       client.server_capabilities.semanticTokensProvider = nil
+        --     end
+        --   end
+        -- end,
       })
-
-      -- Lưu handler mặc định
-      local default_signature_help = vim.lsp.handlers["textDocument/signatureHelp"]
-
-      -- Override để chặn notify rác
-      vim.lsp.handlers["textDocument/signatureHelp"] = function(err, result, ctx, config)
-        if err or not (result and result.signatures and result.signatures[1]) then
-          return
-        end
-        return default_signature_help(err, result, ctx, config)
-      end
 
       -- get all the servers that are available through mason-lspconfig
       local have_mason = LazyVim.has "mason-lspconfig.nvim"
@@ -279,74 +268,37 @@ return {
           and vim.tbl_keys(require("mason-lspconfig.mappings").get_mason_map().lspconfig_to_package)
         or {} --[[ @as string[] ]]
 
-      local exclude_automatic_enable = {} ---@type string[]
-
+      ---@return boolean? exclude automatic setup
       local function configure(server)
-        local server_opts = opts.servers[server] or {}
-
-        local setup = opts.setup[server] or opts.setup["*"]
-        if setup and setup(server, server_opts) then
-          return true -- lsp will be setup by the setup function
+        local sopts = opts.servers[server]
+        sopts = sopts == true and {} or (not sopts) and { enabled = false } or sopts --[[@as lazyvim.lsp.Config]]
+        if sopts.enabled == false then
+          return true
         end
 
-        vim.lsp.config(server, server_opts)
+        local setup = opts.setup[server] or opts.setup["*"]
+        if setup and setup(server, sopts) then
+          return true -- lsp will be configured and enabled by the setup function
+        end
+
+        vim.lsp.config(server, sopts) -- configure the server
 
         -- manually enable if mason=false or if this is a server that cannot be installed with mason-lspconfig
-        if server_opts.mason == false or not vim.tbl_contains(mason_all, server) then
+        if sopts.mason == false or not vim.tbl_contains(mason_all, server) then
           vim.lsp.enable(server)
           return true
         end
-        return false
       end
 
-      local ensure_installed = {} ---@type string[]
-      for server, server_opts in pairs(opts.servers) do
-        server_opts = server_opts == true and {} or server_opts or false
-        if server_opts and server_opts.enabled ~= false then
-          -- run manual setup if mason=false or if this is a server that cannot be installed with mason-lspconfig
-          if configure(server) then
-            exclude_automatic_enable[#exclude_automatic_enable + 1] = server
-          else
-            ensure_installed[#ensure_installed + 1] = server
-          end
-        else
-          exclude_automatic_enable[#exclude_automatic_enable + 1] = server
-        end
-      end
-
+      local servers = vim.tbl_keys(opts.servers)
+      local exclude = vim.tbl_filter(configure, servers)
       if have_mason then
         require("mason-lspconfig").setup {
-          ensure_installed = vim.tbl_deep_extend(
-            "force",
-            ensure_installed,
-            LazyVim.opts("mason-lspconfig.nvim").ensure_installed or {}
-          ),
-          automatic_enable = {
-            exclude = exclude_automatic_enable,
-          },
+          ensure_installed = vim.tbl_filter(function(server)
+            return not vim.tbl_contains(exclude, server)
+          end, vim.list_extend(servers, LazyVim.opts("mason-lspconfig.nvim").ensure_installed or {})),
+          automatic_enable = { exclude = exclude },
         }
-      end
-
-      if vim.lsp.is_enabled and vim.lsp.is_enabled "denols" and vim.lsp.is_enabled "vtsls" then
-        ---@param server string
-        local resolve = function(server)
-          local markers, root_dir = vim.lsp.config[server].root_markers, vim.lsp.config[server].root_dir
-          vim.lsp.config(server, {
-            root_dir = function(bufnr, on_dir)
-              local is_deno = vim.fs.root(bufnr, { "deno.json", "deno.jsonc" }) ~= nil
-              if is_deno == (server == "denols") then
-                if root_dir then
-                  return root_dir(bufnr, on_dir)
-                elseif type(markers) == "table" then
-                  local root = vim.fs.root(bufnr, markers)
-                  return root and on_dir(root)
-                end
-              end
-            end,
-          })
-        end
-        resolve "denols"
-        resolve "vtsls"
       end
     end),
   },
@@ -357,14 +309,12 @@ return {
     "mason-org/mason.nvim",
     cmd = "Mason",
     keys = { { "<leader>cm", "<cmd>Mason<cr>", desc = "Mason" } },
+    build = ":MasonUpdate",
     opts_extend = { "ensure_installed" },
     opts = {
       ensure_installed = {
         "stylua",
         "shfmt",
-        "codespell",
-        "shellcheck",
-        "prettier",
       },
     },
     ---@param opts MasonSettings | {ensure_installed: string[]}

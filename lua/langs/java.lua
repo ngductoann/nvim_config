@@ -20,32 +20,12 @@ return {
     opts = { ensure_installed = { "java" } },
   },
 
-  -- 3. DAP (optional)
-  {
-    "mfussenegger/nvim-dap",
-    optional = true,
-    opts = function()
-      local dap = require "dap"
-      dap.configurations.java = {
-        {
-          type = "java",
-          request = "attach",
-          name = "Debug (Attach) - Remote",
-          hostName = "127.0.0.1",
-          port = 5005,
-        },
-      }
-    end,
-  },
-
   -- 4. Mason packages
   {
     "mason-org/mason.nvim",
     opts = {
       ensure_installed = {
         "jdtls",
-        "java-debug-adapter",
-        "java-test",
         "google-java-format",
         "vscode-spring-boot-tools",
       },
@@ -81,7 +61,7 @@ return {
   {
     "mfussenegger/nvim-jdtls",
     ft = { "java" },
-    dependencies = { "mfussenegger/nvim-dap", "folke/which-key.nvim" },
+    dependencies = { "folke/which-key.nvim" },
     opts = function()
       local mason_bin = vim.fn.stdpath "data" .. "/mason/bin/jdtls"
       local cmd = { mason_bin }
@@ -123,32 +103,12 @@ return {
             inlayHints = { parameterNames = { enabled = "none" } },
           },
         },
-        dap = { hotcodereplace = "auto" },
-        dap_main = {},
         test = true,
       }
     end,
     config = function(_, opts)
       local bundles = {}
       local mr = require "mason-registry"
-
-      -- Java Debug
-      if mr.is_installed "java-debug-adapter" then
-        vim.list_extend(
-          bundles,
-          vim.split(
-            vim.fn.glob(
-              vim.fn.stdpath "data" .. "/mason/share/java-debug-adapter/com.microsoft.java.debug.plugin-*.jar"
-            ),
-            "\n"
-          )
-        )
-      end
-
-      -- Java Test
-      if mr.is_installed "java-test" then
-        vim.list_extend(bundles, vim.split(vim.fn.glob(vim.fn.stdpath "data" .. "/mason/share/java-test/*.jar"), "\n"))
-      end
 
       -- Spring Boot
       if mr.is_installed "vscode-spring-boot-tools" then
@@ -205,37 +165,6 @@ return {
                 { "<leader>cxm", [[<ESC><CMD>lua require('jdtls').extract_method(true)<CR>]], desc = "Extract Method" },
               },
             }
-
-            -- Debug + Test
-            if #bundles > 0 then
-              require("jdtls").setup_dap(opts.dap)
-              require("jdtls.dap").setup_dap_main_class_configs(opts.dap_main)
-
-              if opts.test then
-                wk.add {
-                  {
-                    mode = "n",
-                    buffer = args.buf,
-                    { "<leader>t", group = "test" },
-                    {
-                      "<leader>tt",
-                      function()
-                        require("jdtls.dap").test_class()
-                      end,
-                      desc = "Run All Tests",
-                    },
-                    {
-                      "<leader>tr",
-                      function()
-                        require("jdtls.dap").test_nearest_method()
-                      end,
-                      desc = "Run Nearest Test",
-                    },
-                    { "<leader>tT", require("jdtls.dap").pick_test, desc = "Pick Test" },
-                  },
-                }
-              end
-            end
           end
         end,
       })

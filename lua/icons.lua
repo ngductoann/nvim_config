@@ -44,22 +44,23 @@ return {
     BladeNav = "",
   },
   colors = {
-    base00 = "#0f0f0f", -- nền chính
-    base01 = "#1a1a1a", -- nền phụ
-    base02 = "#222222", -- block
-    base03 = "#5a5a5a", -- comment
-    base04 = "#a0a0a0", -- text phụ
-    base05 = "#d4d4d4", -- text chính
-    base06 = "#e5e5e5",
-    base07 = "#ffffff",
-    base08 = "#d16969", -- red
-    base09 = "#d7ba7d", -- orange
-    base0A = "#4ec9b0", -- teal
-    base0B = "#b5cea8", -- green
-    base0C = "#9cdcfe", -- cyan
-    base0D = "#569cd6", -- blue
-    base0E = "#c586c0", -- purple
-    base0F = "#ce9178", -- brown
+    base00 = "#1f1f1f", -- editor background
+    base01 = "#181818", -- sidebar / panel
+    base02 = "#2a2d2e", -- selection / block
+    base03 = "#6a9955", -- comment
+    base04 = "#808080", -- subtle text
+    base05 = "#d5d5d5", -- main text
+    base06 = "#e5e5e5", -- lighter text
+    base07 = "#ffffff", -- white
+
+    base08 = "#d16969", -- red (errors)
+    base09 = "#d7ba7d", -- orange (numbers)
+    base0A = "#dcdcaa", -- yellow (constants)
+    base0B = "#b5cea8", -- green (strings)
+    base0C = "#4ec9b0", -- cyan (types)
+    base0D = "#569cd6", -- blue (keywords)
+    base0E = "#c586c0", -- purple (classes/functions)
+    base0F = "#ce9178", -- brown (parameters, accents)
   },
   dap = {
     Stopped = { "󰁕 ", "DiagnosticWarn", "DapStoppedLine" },

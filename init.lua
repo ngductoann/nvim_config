@@ -21,3 +21,5 @@ require("lazy").setup({
 }, lazy_config)
 
 require "mappings"
+require "statusline"
+require "tabline"

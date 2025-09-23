@@ -10,19 +10,19 @@ return {
     cond = has_git,
     opts = {
       signs = {
-        add = { text = "▎" },
-        change = { text = "▎" },
-        delete = { text = "" },
-        topdelete = { text = "" },
-        changedelete = { text = "▎" },
-        untracked = { text = "▎" },
+        add = { text = "+" },
+        change = { text = "~" },
+        delete = { text = "-" },
+        topdelete = { text = "‾" },
+        changedelete = { text = "≃" },
+        untracked = { text = "?" },
       },
       signs_staged = {
-        add = { text = "▎" },
-        change = { text = "▎" },
-        delete = { text = "" },
-        topdelete = { text = "" },
-        changedelete = { text = "▎" },
+        add = { text = "+" },
+        change = { text = "~" },
+        delete = { text = "-" },
+        topdelete = { text = "‾" },
+        changedelete = { text = "≃" },
       },
       on_attach = function(buffer)
         local gs = package.loaded.gitsigns
@@ -203,8 +203,24 @@ return {
     opts = {
       git_cmd = "git",
       symbols = {
-        merge_commit = "M",
-        commit = "*",
+        merge_commit = "◆", -- diamond
+        commit = "●", -- bullet
+        merge_commit_end = "◈",
+        commit_end = "○",
+
+        -- Advanced
+        GVER = "│", -- vertical
+        GHOR = "─", -- horizontal
+        GCLD = "╭", -- corner left-down
+        GCRD = "╮", -- corner right-down
+        GCLU = "╰", -- corner left-up
+        GCRU = "╯", -- corner right-up
+        GLRU = "┐",
+        GLRD = "┌",
+        GLUD = "┴",
+        GRUD = "┬",
+        GFORKU = "╨",
+        GFORKD = "╥",
       },
       format = {
         timestamp = "%H:%M:%S %d-%m-%Y",
