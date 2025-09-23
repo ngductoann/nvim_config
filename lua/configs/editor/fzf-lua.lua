@@ -108,7 +108,7 @@ return {
     end
 
     return {
-      "default-title",
+      "borderless-full",
       fzf_colors = true,
       fzf_opts = {
         ["--no-scrollbar"] = true,
@@ -161,12 +161,13 @@ return {
         })
       end,
       winopts = {
-        width = 0.8,
-        height = 0.8,
-        row = 0.5,
+        width = 1,
+        height = 0.4,
+        row = 1,
         col = 0.5,
         preview = {
-          scrollchars = { "┃", "" },
+          -- scrollchars = { "┃", "" },
+          border = "none",
         },
       },
       files = {
@@ -239,12 +240,30 @@ return {
     { "<leader><space>", "<cmd>FzfLua files<cr>", desc = "Find Files (Root Dir)" },
     -- find
     { "<leader>fb", "<cmd>FzfLua buffers sort_mru=true sort_lastused=true<cr>", desc = "Buffers" },
-    { "<leader>fc", function() require("fzf-lua").files({ cwd = vim.fn.stdpath("config") }) end, desc = "Find Config File" },
+    {
+      "<leader>fc",
+      function()
+        require("fzf-lua").files { cwd = vim.fn.stdpath "config" }
+      end,
+      desc = "Find Config File",
+    },
     { "<leader>ff", "<cmd>FzfLua files<cr>", desc = "Find Files (Root Dir)" },
-    { "<leader>fF", function() require("fzf-lua").files({ root = false }) end, desc = "Find Files (cwd)" },
+    {
+      "<leader>fF",
+      function()
+        require("fzf-lua").files { root = false }
+      end,
+      desc = "Find Files (cwd)",
+    },
     { "<leader>fg", "<cmd>FzfLua git_files<cr>", desc = "Find Files (git-files)" },
     { "<leader>fr", "<cmd>FzfLua oldfiles<cr>", desc = "Recent" },
-    { "<leader>fR", function() require("fzf-lua").oldfiles({ cwd = vim.uv.cwd() }) end, desc = "Recent (cwd)" },
+    {
+      "<leader>fR",
+      function()
+        require("fzf-lua").oldfiles { cwd = vim.uv.cwd() }
+      end,
+      desc = "Recent (cwd)",
+    },
     -- git
     { "<leader>gc", "<cmd>FzfLua git_commits<CR>", desc = "Commits" },
     { "<leader>gs", "<cmd>FzfLua git_status<CR>", desc = "Status" },
@@ -257,7 +276,13 @@ return {
     { "<leader>sd", "<cmd>FzfLua diagnostics_document<cr>", desc = "Document Diagnostics" },
     { "<leader>sD", "<cmd>FzfLua diagnostics_workspace<cr>", desc = "Workspace Diagnostics" },
     { "<leader>sg", "<cmd>FzfLua live_grep<cr>", desc = "Grep (Root Dir)" },
-    { "<leader>sG", function() require("fzf-lua").live_grep({ root = false }) end, desc = "Grep (cwd)" },
+    {
+      "<leader>sG",
+      function()
+        require("fzf-lua").live_grep { root = false }
+      end,
+      desc = "Grep (cwd)",
+    },
     { "<leader>sh", "<cmd>FzfLua help_tags<cr>", desc = "Help Pages" },
     { "<leader>sH", "<cmd>FzfLua highlights<cr>", desc = "Search Highlight Groups" },
     { "<leader>sj", "<cmd>FzfLua jumps<cr>", desc = "Jumplist" },
@@ -268,9 +293,22 @@ return {
     { "<leader>sR", "<cmd>FzfLua resume<cr>", desc = "Resume" },
     { "<leader>sq", "<cmd>FzfLua quickfix<cr>", desc = "Quickfix List" },
     { "<leader>sw", "<cmd>FzfLua grep_cword<cr>", desc = "Word (Root Dir)" },
-    { "<leader>sW", function() require("fzf-lua").grep_cword({ root = false }) end, desc = "Word (cwd)" },
+    {
+      "<leader>sW",
+      function()
+        require("fzf-lua").grep_cword { root = false }
+      end,
+      desc = "Word (cwd)",
+    },
     { "<leader>sw", "<cmd>FzfLua grep_visual<cr>", mode = "v", desc = "Selection (Root Dir)" },
-    { "<leader>sW", function() require("fzf-lua").grep_visual({ root = false }) end, mode = "v", desc = "Selection (cwd)" },
+    {
+      "<leader>sW",
+      function()
+        require("fzf-lua").grep_visual { root = false }
+      end,
+      mode = "v",
+      desc = "Selection (cwd)",
+    },
     { "<leader>uC", "<cmd>FzfLua colorschemes<cr>", desc = "Colorscheme with Preview" },
     {
       "<leader>ss",

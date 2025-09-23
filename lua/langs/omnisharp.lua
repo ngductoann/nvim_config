@@ -6,11 +6,16 @@ return {
     }
   end,
 
+  -- Omnisharp extended LSP
   { "Hoffs/omnisharp-extended-lsp.nvim", lazy = true },
+
+  -- Treesitter cho C#
   {
     "nvim-treesitter/nvim-treesitter",
     opts = { ensure_installed = { "c_sharp" } },
   },
+
+  -- Null-ls / Conform để format
   {
     "nvimtools/none-ls.nvim",
     optional = true,
@@ -35,10 +40,14 @@ return {
       },
     },
   },
+
+  -- Mason đảm bảo cài formatter
   {
     "mason-org/mason.nvim",
-    opts = { ensure_installed = { "csharpier", "netcoredbg" } },
+    opts = { ensure_installed = { "csharpier" } },
   },
+
+  -- LSP Config cho Omnisharp
   {
     "neovim/nvim-lspconfig",
     opts = {
@@ -63,53 +72,6 @@ return {
           enable_roslyn_analyzers = true,
           organize_imports_on_format = true,
           enable_import_completion = true,
-        },
-      },
-    },
-  },
-  {
-    "mfussenegger/nvim-dap",
-    optional = true,
-    opts = function()
-      local dap = require "dap"
-      if not dap.adapters["netcoredbg"] then
-        require("dap").adapters["netcoredbg"] = {
-          type = "executable",
-          command = vim.fn.exepath "netcoredbg",
-          args = { "--interpreter=vscode" },
-          options = {
-            detached = false,
-          },
-        }
-      end
-      for _, lang in ipairs { "cs", "fsharp", "vb" } do
-        if not dap.configurations[lang] then
-          dap.configurations[lang] = {
-            {
-              type = "netcoredbg",
-              name = "Launch file",
-              request = "launch",
-              ---@diagnostic disable-next-line: redundant-parameter
-              program = function()
-                return vim.fn.input("Path to dll: ", vim.fn.getcwd() .. "/", "file")
-              end,
-              cwd = "${workspaceFolder}",
-            },
-          }
-        end
-      end
-    end,
-  },
-  {
-    "nvim-neotest/neotest",
-    optional = true,
-    dependencies = {
-      "Issafalcon/neotest-dotnet",
-    },
-    opts = {
-      adapters = {
-        ["neotest-dotnet"] = {
-          -- Here we can set options for neotest-dotnet
         },
       },
     },

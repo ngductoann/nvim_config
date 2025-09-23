@@ -23,25 +23,11 @@ return {
   -- repeat those selections to select an outer text object.
   {
     "nvim-mini/mini.ai",
-    event = "VeryLazy",
+    -- event = "VeryLazy",
+    event = { "InsertEnter", "CmdlineEnter" },
     opts = require("configs.coding.mini-ai").opts,
     config = require("configs.coding.mini-ai").config,
   },
-
-  -- Configures LuaLS to support auto-completion and type checking
-  -- while editing your Neovim configuration.
-  -- {
-  --   "folke/lazydev.nvim",
-  --   ft = "lua",
-  --   cmd = "LazyDev",
-  --   opts = {
-  --     library = {
-  --       { path = "${3rd}/luv/library", words = { "vim%.uv" } },
-  --       { path = "LazyVim", words = { "LazyVim" } },
-  --       { path = "lazy.nvim", words = { "LazyVim" } },
-  --     },
-  --   },
-  -- },
 
   -- add luasnip
   {

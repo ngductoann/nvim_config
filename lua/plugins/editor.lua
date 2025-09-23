@@ -44,13 +44,13 @@ return {
     keys = require("configs.editor.mini-files").keys,
   },
 
-  -- {
-  --   "RRethy/vim-illuminate",
-  --   event = "User FilePost",
-  --   opts = require("configs.editor.vim-illuminate").opts,
-  --   config = require("configs.editor.vim-illuminate").config,
-  --   keys = require("configs.editor.vim-illuminate").keys,
-  -- },
+  {
+    "RRethy/vim-illuminate",
+    event = "User FilePost",
+    opts = require("configs.editor.vim-illuminate").opts,
+    config = require("configs.editor.vim-illuminate").config,
+    keys = require("configs.editor.vim-illuminate").keys,
+  },
 
   {
     "nvim-mini/mini.bufremove",
@@ -58,20 +58,20 @@ return {
     opts = {},
   },
 
-  {
-    "SmiteshP/nvim-navic",
-    lazy = true,
-    init = require("configs.editor.navic").init,
-    opts = require("configs.editor.navic").opts,
-  },
-
-  {
-    "SmiteshP/nvim-navbuddy",
-    dependencies = {
-      "SmiteshP/nvim-navic",
-      "MunifTanjim/nui.nvim",
-    },
-    opts = require("configs.editor.nvim-navbuddy").opts,
-    keys = require("configs.editor.nvim-navbuddy").keys,
-  },
+  -- {
+  --   "SmiteshP/nvim-navic",
+  --   lazy = true,
+  --   init = require("configs.editor.navic").init,
+  --   opts = require("configs.editor.navic").opts,
+  -- },
+  --
+  -- {
+  --   "SmiteshP/nvim-navbuddy",
+  --   dependencies = {
+  --     "SmiteshP/nvim-navic",
+  --     "MunifTanjim/nui.nvim",
+  --   },
+  --   opts = require("configs.editor.nvim-navbuddy").opts,
+  --   keys = require("configs.editor.nvim-navbuddy").keys,
+  -- },
 }

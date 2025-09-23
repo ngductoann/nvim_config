@@ -165,8 +165,6 @@ return {
         })
       end
 
-      
-
       -- setup keymaps
       LazyVim.lsp.on_attach(function(client, buffer)
         require("plugins.lsp.keymaps").on_attach(client, buffer)
@@ -229,6 +227,7 @@ return {
       vim.diagnostic.config(vim.deepcopy(opts.diagnostics))
 
       local capabilities = vim.lsp.protocol.make_client_capabilities()
+      capabilities = require("blink.cmp").get_lsp_capabilities(capabilities)
 
       capabilities.textDocument.completion.completionItem = {
         documentationFormat = { "markdown", "plaintext" },
@@ -250,11 +249,17 @@ return {
 
       vim.lsp.config("*", {
         capabilities = capabilities,
-        -- on_init = function(client, _)
-        --   if client.supports_method "textDocument/semanticTokens" then
-        --     client.server_capabilities.semanticTokensProvider = nil
-        --   end
-        -- end,
+        on_init = function(client, _)
+          if vim.fn.has "nvim-0.11" ~= 1 then
+            if client.supports_method "textDocument/semanticTokens" then
+              client.server_capabilities.semanticTokensProvider = nil
+            end
+          else
+            if client:supports_method "textDocument/semanticTokens" then
+              client.server_capabilities.semanticTokensProvider = nil
+            end
+          end
+        end,
       })
 
       -- Lưu handler mặc định
@@ -400,22 +405,6 @@ return {
             format = auto_format,
           },
         },
-      },
-      setup = {
-        eslint = function()
-          if not auto_format then
-            return
-          end
-
-          local formatter = LazyVim.lsp.formatter {
-            name = "eslint: lsp",
-            primary = false,
-            priority = 200,
-            filter = "eslint",
-          }
-
-          
-        end,
       },
     },
   },

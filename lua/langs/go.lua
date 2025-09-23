@@ -5,10 +5,14 @@ return {
       root = { "go.work", "go.mod" },
     }
   end,
+
+  -- Treesitter cho Go
   {
     "nvim-treesitter/nvim-treesitter",
     opts = { ensure_installed = { "go", "gomod", "gowork", "gosum" } },
   },
+
+  -- LSP Config cho gopls
   {
     "neovim/nvim-lspconfig",
     opts = {
@@ -18,7 +22,6 @@ return {
             gopls = {
               gofumpt = true,
               codelenses = {
-                gc_details = false,
                 generate = true,
                 regenerate_cgo = true,
                 run_govulncheck = true,
@@ -53,8 +56,7 @@ return {
       },
       setup = {
         gopls = function(_, opts)
-          -- workaround for gopls not supporting semanticTokensProvider
-          -- https://github.com/golang/go/issues/54531#issuecomment-1464982242
+          -- workaround gopls semanticTokensProvider
           LazyVim.lsp.on_attach(function(client, _)
             if not client.server_capabilities.semanticTokensProvider then
               local semantic = client.config.capabilities.textDocument.semanticTokens
@@ -68,16 +70,18 @@ return {
               }
             end
           end, "gopls")
-          -- end workaround
         end,
       },
     },
   },
-  -- Ensure Go tools are installed
+
+  -- Mason đảm bảo cài Go tools cơ bản
   {
     "mason-org/mason.nvim",
     opts = { ensure_installed = { "goimports", "gofumpt" } },
   },
+
+  -- Null-ls / Conform cho formatting và code actions
   {
     "nvimtools/none-ls.nvim",
     optional = true,
@@ -106,38 +110,8 @@ return {
       },
     },
   },
-  {
-    "mfussenegger/nvim-dap",
-    optional = true,
-    dependencies = {
-      {
-        "mason-org/mason.nvim",
-        opts = { ensure_installed = { "delve" } },
-      },
-      {
-        "leoluz/nvim-dap-go",
-        opts = {},
-      },
-    },
-  },
-  {
-    "nvim-neotest/neotest",
-    optional = true,
-    dependencies = {
-      "fredrikaverpil/neotest-golang",
-    },
-    opts = {
-      adapters = {
-        ["neotest-golang"] = {
-          -- Here we can set options for neotest-golang, e.g.
-          -- go_test_args = { "-v", "-race", "-count=1", "-timeout=60s" },
-          dap_go_enabled = true, -- requires leoluz/nvim-dap-go
-        },
-      },
-    },
-  },
 
-  -- Filetype icons
+  -- Filetype icons cho Go
   {
     "nvim-mini/mini.icons",
     opts = {

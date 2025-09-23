@@ -3,7 +3,7 @@ local M = {}
 
 -- taken from MiniExtra.gen_ai_spec.buffer
 function M.ai_buffer(ai_type)
-  local start_line, end_line = 1, vim.fn.line("$")
+  local start_line, end_line = 1, vim.fn.line "$"
   if ai_type == "i" then
     -- Skip first and last blank lines for `i` textobject
     local first_nonblank, last_nonblank = vim.fn.nextnonblank(start_line), vim.fn.prevnonblank(end_line)
@@ -81,17 +81,17 @@ end
 
 ---@param opts {skip_next: string, skip_ts: string[], skip_unbalanced: boolean, markdown: boolean}
 function M.pairs(opts)
-  Snacks.toggle({
-    name = "Mini Pairs",
-    get = function()
-      return not vim.g.minipairs_disable
-    end,
-    set = function(state)
-      vim.g.minipairs_disable = not state
-    end,
-  }):map("<leader>up")
+  -- Snacks.toggle({
+  --   name = "Mini Pairs",
+  --   get = function()
+  --     return not vim.g.minipairs_disable
+  --   end,
+  --   set = function(state)
+  --     vim.g.minipairs_disable = not state
+  --   end,
+  -- }):map("<leader>up")
 
-  local pairs = require("mini.pairs")
+  local pairs = require "mini.pairs"
   pairs.setup(opts)
   local open = pairs.open
   pairs.open = function(pair, neigh_pattern)
@@ -103,7 +103,7 @@ function M.pairs(opts)
     local cursor = vim.api.nvim_win_get_cursor(0)
     local next = line:sub(cursor[2] + 1, cursor[2] + 1)
     local before = line:sub(1, cursor[2])
-    if opts.markdown and o == "`" and vim.bo.filetype == "markdown" and before:match("^%s*``") then
+    if opts.markdown and o == "`" and vim.bo.filetype == "markdown" and before:match "^%s*``" then
       return "`\n```" .. vim.api.nvim_replace_termcodes("<up>", true, true, true)
     end
     if opts.skip_next and next ~= "" and next:match(opts.skip_next) then
