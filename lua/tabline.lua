@@ -1,22 +1,11 @@
 -- ~/.config/nvim/lua/tabline.lua
 local M = {}
 
--- Rút ngắn path nếu trùng tên
-local function short_path(path)
-  local parts = vim.split(path, "/")
-  if #parts <= 2 then
-    return path
-  end
-  for i = 1, #parts - 1 do
-    if parts[i] ~= "" then
-      parts[i] = string.sub(parts[i], 1, 1)
-    end
-  end
-  return table.concat(parts, "/")
-end
+-- Cache mini.icons
+local ok_icons, mini_icons = pcall(require, "mini.icons")
 
 -- Lấy label hiển thị cho buffer
-local function buf_label(buf_id)
+local function buf_label(buf_id, counts)
   local name = vim.api.nvim_buf_get_name(buf_id)
   if name == "" then
     return "[No Name]"
@@ -24,52 +13,45 @@ local function buf_label(buf_id)
 
   local filename = vim.fn.fnamemodify(name, ":t")
   local rel_path = vim.fn.fnamemodify(name, ":.")
-
-  -- Kiểm tra duplicate
-  local duplicate = false
-  for _, b in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_loaded(b) and vim.bo[b].buflisted then
-      local other = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(b), ":t")
-      if other == filename and b ~= buf_id then
-        duplicate = true
-        break
-      end
-    end
-  end
-
-  local display = duplicate and short_path(rel_path) or filename
+  local display = (counts[filename] or 0) > 1 and LazyVim.short_path(rel_path) or filename
 
   -- Icon filetype
   local ft = vim.bo[buf_id].filetype
   local icon = ""
-  local ok, mini_icons = pcall(require, "mini.icons")
-  if ok and ft ~= "" then
-    icon = mini_icons.get("filetype", ft)
-    if type(icon) ~= "string" then
-      icon = ""
-    end
+  if ok_icons and ft ~= "" then
+    local ic = mini_icons.get("filetype", ft)
+    icon = type(ic) == "string" and ic or ""
   end
 
   -- Modified / readonly
   local modified = vim.bo[buf_id].modified and " [+]" or ""
   local readonly = (not vim.bo[buf_id].modifiable or vim.bo[buf_id].readonly) and " " or ""
 
-  -- Format: | ICON PATH [+/]
   return string.format("| %s %s%s%s ", icon, display, modified, readonly)
 end
 
 -- Render tabline
 function M.render_tabline()
-  local s = ""
+  local bufs, counts, parts = {}, {}, {}
+
+  -- Collect buffers
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].buflisted and vim.bo[buf].buftype == "" then
-      -- Highlight active buffer
-      local hl = (buf == vim.api.nvim_get_current_buf()) and "%#TabLineSel#" or "%#TabLine#"
-      local label = buf_label(buf)
-      s = s .. hl .. label
+      local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buf), ":t")
+      counts[filename] = (counts[filename] or 0) + 1
+      table.insert(bufs, buf)
     end
   end
-  return s .. "%#TabLineFill#"
+
+  -- Render
+  local current = vim.api.nvim_get_current_buf()
+  for _, buf in ipairs(bufs) do
+    local hl = (buf == current) and "%#TabLineSel#" or "%#TabLine#"
+    table.insert(parts, hl .. buf_label(buf, counts))
+  end
+
+  table.insert(parts, "%#TabLineFill#")
+  return table.concat(parts, "")
 end
 
 -- Cấu hình Vim

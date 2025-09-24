@@ -59,16 +59,9 @@ return {
     },
     dependencies = {
       "rafamadriz/friendly-snippets",
-      -- add blink.compat to dependencies
-      {
-        "saghen/blink.compat",
-        opts = {},
-        version = not vim.g.lazyvim_blink_main and "*",
-      },
     },
     event = { "InsertEnter", "CmdlineEnter" },
     opts = require("configs.coding.blink").opts,
-    config = require("configs.coding.blink").config,
   },
 
   {

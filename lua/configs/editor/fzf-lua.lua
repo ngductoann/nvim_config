@@ -161,9 +161,9 @@ return {
         })
       end,
       winopts = {
-        width = 1,
-        height = 0.4,
-        row = 1,
+        width = 0.8,
+        height = 0.8,
+        row = 0.5,
         col = 0.5,
         preview = {
           -- scrollchars = { "┃", "" },

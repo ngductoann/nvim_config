@@ -52,12 +52,6 @@ return {
     keys = require("configs.editor.vim-illuminate").keys,
   },
 
-  {
-    "nvim-mini/mini.bufremove",
-    version = false,
-    opts = {},
-  },
-
   -- {
   --   "SmiteshP/nvim-navic",
   --   lazy = true,

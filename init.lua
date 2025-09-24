@@ -1,5 +1,4 @@
 require "options"
-require "commands"
 
 -- bootstrap lazy and all plugins
 local lazypath = vim.fn.stdpath "data" .. "/lazy/lazy.nvim"
@@ -13,6 +12,7 @@ vim.opt.rtp:prepend(lazypath)
 
 local lazy_config = require "lazy_config"
 _G.LazyVim = require "util"
+_G.LazyVim.icons = require "icons"
 
 -- load plugins
 require("lazy").setup({
@@ -23,3 +23,4 @@ require("lazy").setup({
 require "mappings"
 require "statusline"
 require "tabline"
+require "commands"

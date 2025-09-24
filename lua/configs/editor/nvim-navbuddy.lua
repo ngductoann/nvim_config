@@ -23,7 +23,7 @@ return {
       },
 
       -- VSCode icons
-      icons = require("icons").icons_vscode,
+      icons = LazyVim.icons.icons_vscode,
     }
   end,
   keys = {

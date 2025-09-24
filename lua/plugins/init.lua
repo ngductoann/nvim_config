@@ -1,4 +1,5 @@
 return {
+  { "nvim-tree/nvim-web-devicons", opts = {} },
   {
     "echasnovski/mini.notify",
     event = { "User LazyUIEnter", "LspAttach" },

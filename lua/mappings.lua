@@ -100,8 +100,6 @@ map("n", "<leader>ds", vim.diagnostic.setloclist, { desc = "LSP diagnostic locli
 -- tabufline
 map("n", "<leader>bn", "<cmd>enew<CR>", { desc = "buffer new" })
 
-local bufremove = require "mini.bufremove"
-
 -- next/prev buffer
 map("n", "<S-l>", "<cmd>bnext<CR>", { desc = "buffer goto next" })
 map("n", "<S-h>", "<cmd>bprevious<CR>", { desc = "buffer goto prev" })
@@ -110,47 +108,16 @@ map("n", "<S-h>", "<cmd>bprevious<CR>", { desc = "buffer goto prev" })
 map("n", "[b", "<cmd>-b<CR>", { desc = "buffer move prev" })
 map("n", "]b", "<cmd>+b<CR>", { desc = "buffer move next" })
 
--- close current buffer
 map("n", "<leader>bd", function()
-  bufremove.delete(0, false)
+  LazyVim.delete(0)
 end, { desc = "buffer close" })
 
 map("n", "<leader>bo", function()
-  local cur = vim.api.nvim_get_current_buf()
-
-  -- đảm bảo mọi window hiển thị cur trước khi xóa
-  for _, win in ipairs(vim.api.nvim_list_wins()) do
-    vim.api.nvim_win_set_buf(win, cur)
-  end
-
-  -- xóa buffer khác
-  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if buf ~= cur and vim.api.nvim_buf_is_loaded(buf) then
-      require("mini.bufremove").delete(buf, true)
-    end
-  end
+  LazyVim.delete_others()
 end, { desc = "close other buffers + windows" })
 
 map("n", "<leader>bO", function()
-  -- mở một buffer trống để giữ lại
-  vim.cmd "enew"
-
-  -- lấy danh sách tất cả window hiện có (trừ current)
-  local cur_win = vim.api.nvim_get_current_win()
-
-  for _, win in ipairs(vim.api.nvim_list_wins()) do
-    if win ~= cur_win then
-      vim.api.nvim_win_close(win, true)
-    end
-  end
-
-  -- xoá toàn bộ buffer khác (trừ cái vừa enew)
-  local cur_buf = vim.api.nvim_get_current_buf()
-  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if buf ~= cur_buf and vim.api.nvim_buf_is_loaded(buf) then
-      pcall(vim.api.nvim_buf_delete, buf, { force = false })
-    end
-  end
+  LazyVim.delete_all()
 end, { desc = "close all buffers, keep one empty window" })
 
 -- Comment

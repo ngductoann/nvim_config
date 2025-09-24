@@ -1,5 +1,4 @@
 local auto_format = vim.g.lazyvim_eslint_auto_format == nil or vim.g.lazyvim_eslint_auto_format
-local icons = require "icons"
 
 return {
   -- lspconfig
@@ -28,10 +27,10 @@ return {
           severity_sort = true,
           signs = {
             text = {
-              [vim.diagnostic.severity.ERROR] = icons.diagnostics.Error,
-              [vim.diagnostic.severity.WARN] = icons.diagnostics.Warn,
-              [vim.diagnostic.severity.HINT] = icons.diagnostics.Hint,
-              [vim.diagnostic.severity.INFO] = icons.diagnostics.Info,
+              [vim.diagnostic.severity.ERROR] = LazyVim.icons.diagnostics.Error,
+              [vim.diagnostic.severity.WARN] = LazyVim.icons.diagnostics.Warn,
+              [vim.diagnostic.severity.HINT] = LazyVim.icons.diagnostics.Hint,
+              [vim.diagnostic.severity.INFO] = LazyVim.icons.diagnostics.Info,
             },
           },
         },
@@ -215,10 +214,10 @@ return {
       -- diagnostics
       if type(opts.diagnostics.virtual_text) == "table" and opts.diagnostics.virtual_text.prefix == "icons" then
         opts.diagnostics.virtual_text.prefix = function(diagnostic)
-          local icons = LazyVim.config.icons.diagnostics
-          for d, icon in pairs(icons) do
+          local dia = icons.diagnostics
+          for d, icon in pairs(dia) do
             if diagnostic.severity == vim.diagnostic.severity[d:upper()] then
-              return icon
+              return vim.trim(icon)
             end
           end
           return "●"
@@ -249,17 +248,6 @@ return {
 
       vim.lsp.config("*", {
         capabilities = capabilities,
-        -- on_init = function(client, _)
-        --   if vim.fn.has "nvim-0.11" ~= 1 then
-        --     if client.supports_method "textDocument/semanticTokens" then
-        --       client.server_capabilities.semanticTokensProvider = nil
-        --     end
-        --   else
-        --     if client:supports_method "textDocument/semanticTokens" then
-        --       client.server_capabilities.semanticTokensProvider = nil
-        --     end
-        --   end
-        -- end,
       })
 
       -- get all the servers that are available through mason-lspconfig
@@ -267,37 +255,36 @@ return {
       local mason_all = have_mason
           and vim.tbl_keys(require("mason-lspconfig.mappings").get_mason_map().lspconfig_to_package)
         or {} --[[ @as string[] ]]
+      local mason_exclude = {} ---@type string[]
 
       ---@return boolean? exclude automatic setup
       local function configure(server)
         local sopts = opts.servers[server]
         sopts = sopts == true and {} or (not sopts) and { enabled = false } or sopts --[[@as lazyvim.lsp.Config]]
+
         if sopts.enabled == false then
-          return true
+          mason_exclude[#mason_exclude + 1] = server
+          return
         end
 
+        local use_mason = sopts.mason ~= false and vim.tbl_contains(mason_all, server)
         local setup = opts.setup[server] or opts.setup["*"]
         if setup and setup(server, sopts) then
-          return true -- lsp will be configured and enabled by the setup function
+          mason_exclude[#mason_exclude + 1] = server
+        else
+          vim.lsp.config(server, sopts) -- configure the server
+          if not use_mason then
+            vim.lsp.enable(server)
+          end
         end
-
-        vim.lsp.config(server, sopts) -- configure the server
-
-        -- manually enable if mason=false or if this is a server that cannot be installed with mason-lspconfig
-        if sopts.mason == false or not vim.tbl_contains(mason_all, server) then
-          vim.lsp.enable(server)
-          return true
-        end
+        return use_mason
       end
 
-      local servers = vim.tbl_keys(opts.servers)
-      local exclude = vim.tbl_filter(configure, servers)
+      local install = vim.tbl_filter(configure, vim.tbl_keys(opts.servers))
       if have_mason then
         require("mason-lspconfig").setup {
-          ensure_installed = vim.tbl_filter(function(server)
-            return not vim.tbl_contains(exclude, server)
-          end, vim.list_extend(servers, LazyVim.opts("mason-lspconfig.nvim").ensure_installed or {})),
-          automatic_enable = { exclude = exclude },
+          ensure_installed = vim.list_extend(install, LazyVim.opts("mason-lspconfig.nvim").ensure_installed or {}),
+          automatic_enable = { exclude = mason_exclude },
         }
       end
     end),

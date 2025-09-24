@@ -348,4 +348,80 @@ function M.set_default(option, value)
   return true
 end
 
+function M.short_path(path)
+  if path == "" then
+    return ""
+  end
+  local parts = vim.split(path, "/")
+  if #parts <= 2 then
+    return path
+  end
+  for i = 1, #parts - 1 do
+    if parts[i] ~= "" then
+      parts[i] = parts[i]:sub(1, 1)
+    end
+  end
+  return table.concat(parts, "/")
+end
+
+--- Delete a buffer safely (like mini.bufremove)
+---@param bufnr number|nil Buffer number, default = current
+---@param opts table|nil { force = boolean }
+function M.delete(bufnr, opts)
+  opts = opts or {}
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  -- Nếu buffer đã modified thì hỏi confirm trừ khi force = true
+  if vim.bo[bufnr].modified and not opts.force then
+    vim.ui.input({ prompt = "Buffer modified. Force delete? (y/N) " }, function(input)
+      if input and input:lower() == "y" then
+        pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+      end
+    end)
+  else
+    -- Đảm bảo mọi window hiển thị buffer này sẽ chuyển sang current
+    local cur = vim.api.nvim_get_current_buf()
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      if vim.api.nvim_win_get_buf(win) == bufnr then
+        vim.api.nvim_win_set_buf(win, cur)
+      end
+    end
+    pcall(vim.api.nvim_buf_delete, bufnr, { force = opts.force or false })
+  end
+end
+
+--- Delete all other buffers, keep current
+function M.delete_others()
+  local cur = vim.api.nvim_get_current_buf()
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    vim.api.nvim_win_set_buf(win, cur)
+  end
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if buf ~= cur and vim.api.nvim_buf_is_loaded(buf) then
+      M.delete(buf)
+    end
+  end
+end
+
+--- Delete all buffers and keep one empty window
+function M.delete_all()
+  vim.cmd "enew"
+  local cur_win = vim.api.nvim_get_current_win()
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if win ~= cur_win then
+      vim.api.nvim_win_close(win, true)
+    end
+  end
+  local cur_buf = vim.api.nvim_get_current_buf()
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if buf ~= cur_buf and vim.api.nvim_buf_is_loaded(buf) then
+      M.delete(buf)
+    end
+  end
+end
+
 return M

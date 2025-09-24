@@ -108,7 +108,8 @@ opt.virtualedit = "block" -- Allow cursor to move where there is no text in visu
 opt.wildmode = "longest:full,full" -- Command-line completion mode
 opt.winminwidth = 5 -- Minimum window width
 opt.wrap = false -- Disable line wrap
--- opt.statuscolumn = [[%!v:lua.LazyVim.statuscolumn()]]
+-- hiển thị sign | số dòng | fold
+vim.o.statuscolumn = "%s %=%{v:relnum?v:relnum:v:lnum} %C"
 
 -- Fix markdown indentation settings
 vim.g.markdown_recommended_style = 0
