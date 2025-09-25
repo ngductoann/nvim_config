@@ -52,13 +52,13 @@ return {
     keys = require("configs.editor.vim-illuminate").keys,
   },
 
-  -- {
-  --   "SmiteshP/nvim-navic",
-  --   lazy = true,
-  --   init = require("configs.editor.navic").init,
-  --   opts = require("configs.editor.navic").opts,
-  -- },
-  --
+  {
+    "SmiteshP/nvim-navic",
+    lazy = true,
+    init = require("configs.editor.navic").init,
+    opts = require("configs.editor.navic").opts,
+  },
+
   -- {
   --   "SmiteshP/nvim-navbuddy",
   --   dependencies = {

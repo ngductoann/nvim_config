@@ -73,6 +73,16 @@ return {
         ---@alias lazyvim.lsp.Config vim.lsp.Config|{mason?:boolean, enabled?:boolean}
         ---@type table<string, lazyvim.lsp.Config|boolean>
         servers = {
+          bash_ls = {},
+          html = {},
+          emmet_ls = {},
+          eslint = {
+            settings = {
+              -- helps eslint find the eslintrc when it's placed in a subfolder instead of the cwd root
+              workingDirectories = { mode = "auto" },
+              format = auto_format,
+            },
+          },
           lua_ls = {
             -- mason = false, -- set to false if you don't want this server to be installed with mason
             -- Use this to add any additional keymaps
@@ -327,22 +337,5 @@ return {
         end
       end)
     end,
-  },
-
-  {
-    "neovim/nvim-lspconfig",
-    -- other settings removed for brevity
-    opts = {
-      ---@type table<string, vim.lsp.Config>
-      servers = {
-        eslint = {
-          settings = {
-            -- helps eslint find the eslintrc when it's placed in a subfolder instead of the cwd root
-            workingDirectories = { mode = "auto" },
-            format = auto_format,
-          },
-        },
-      },
-    },
   },
 }
