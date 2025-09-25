@@ -43,7 +43,7 @@ end
 -- Get marks: modified / readonly
 local function get_marks(buf_id)
   local modified = vim.bo[buf_id].modified and " [+]" or ""
-  local readonly = (not vim.bo[buf_id].modifiable or vim.bo[buf_id].readonly) and " " or ""
+  local readonly = (not vim.bo[buf_id].modifiable or vim.bo[buf_id].readonly) and " " or ""
   return modified .. readonly
 end
 
@@ -67,7 +67,7 @@ local function get_visible_buffers()
 end
 
 -- ======================
--- Render tabline
+-- Main render function
 -- ======================
 function M.render_tabline()
   local bufs, counts = get_visible_buffers()
@@ -84,7 +84,7 @@ function M.render_tabline()
 end
 
 -- ======================
--- Vim config
+-- Setup
 -- ======================
 vim.o.showtabline = 2
 vim.o.tabline = "%!v:lua.require'tabline'.render_tabline()"

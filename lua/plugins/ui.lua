@@ -11,9 +11,14 @@ return {
   -- icons
   {
     "nvim-mini/mini.icons",
-    lazy = true,
-    init = require("configs.ui.mini-icons").init,
-    config = require("configs.ui.mini-icons").config,
+    lazy = true, -- lazy-load
+    init = function()
+      require("configs.ui.mini-icons").init() -- chỉ chuẩn bị mock, không setup plugin
+    end,
+    config = function()
+      local opts = require("configs.ui.mini-icons").opts
+      require("mini.icons").setup(opts) -- setup plugin 1 lần
+    end,
   },
 
   -- ui components
@@ -34,7 +39,7 @@ return {
     "lukas-reineke/indent-blankline.nvim",
     event = "User FilePost",
     opts = {
-      indent = { char = "│", highlight = "IblIndent" },
+      indent = { char = "│", highlight = "IblIndent", tab_char = "│" },
       scope = { enabled = false },
     },
     config = function(_, opts)

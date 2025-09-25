@@ -103,6 +103,13 @@ opt.termguicolors = true -- True color support
 opt.timeoutlen = vim.g.vscode and 1000 or 300 -- Lower than default (1000) to quickly trigger which-key
 opt.undofile = true
 opt.undolevels = 10000
+-- Không đọc/ghi file shada
+vim.opt.shadafile = "NONE"
+vim.opt.shada = "" -- không lưu marks, registers, history, search, command,…
+
+-- Persistent undo (nếu muốn undo khi mở lại file)
+vim.opt.undofile = true
+vim.opt.undodir = vim.fn.stdpath "data" .. "/undo"
 opt.updatetime = 200 -- Save swap file and trigger CursorHold
 opt.virtualedit = "block" -- Allow cursor to move where there is no text in visual block mode
 opt.wildmode = "longest:full,full" -- Command-line completion mode

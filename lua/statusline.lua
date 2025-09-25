@@ -1,4 +1,4 @@
--- lua/statusline.lua
+-- ~/.config/nvim/lua/statusline.lua
 local M = {}
 local cache = { git = "", diag = "", file = "" }
 
@@ -25,7 +25,7 @@ local mode_map = {
   i = { "INSERT", "StatusLineInsert" },
   v = { "VISUAL", "StatusLineVisual" },
   V = { "V-LINE", "StatusLineVisual" },
-  [""] = { "V-BLOCK", "StatusLineVisual" },
+  [""] = { "V-BLOCK", "StatusLineVisual" },
   R = { "REPLACE", "StatusLineReplace" },
   c = { "COMMAND", "StatusLineCommand" },
 }
@@ -33,8 +33,7 @@ local mode_map = {
 local function mode_segment()
   local m = vim.api.nvim_get_mode().mode
   local e = mode_map[m] or { m, "StatusLine" }
-  local label, group = e[1], e[2]
-  return hl(group, " " .. label .. " ")
+  return hl(e[2], " " .. e[1] .. " ")
 end
 
 local function git_segment()
@@ -42,7 +41,12 @@ local function git_segment()
   if not g or not g.head or g.head == "" then
     return ""
   end
-  local parts = { " " .. g.head }
+
+  -- Icon branch, ví dụ  (Nerd Font)
+  local branch_icon = ""
+
+  local parts = { branch_icon .. " " .. g.head }
+
   if g.added and g.added > 0 then
     table.insert(parts, hl("GitSignsAdd", "+" .. g.added))
   end
@@ -52,6 +56,7 @@ local function git_segment()
   if g.removed and g.removed > 0 then
     table.insert(parts, hl("GitSignsDelete", "-" .. g.removed))
   end
+
   return table.concat(parts, " ")
 end
 
@@ -102,7 +107,6 @@ end
 -- ==================
 -- Cache updates
 -- ==================
--- cache git khi BufEnter, BufWritePost hoặc khi Gitsigns update
 vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost" }, {
   callback = function()
     cache.git = git_segment()
@@ -116,14 +120,12 @@ vim.api.nvim_create_autocmd("User", {
   end,
 })
 
--- cache diagnostics khi thay đổi
 vim.api.nvim_create_autocmd("DiagnosticChanged", {
   callback = function()
     cache.diag = diagnostics_segment()
   end,
 })
 
--- cache filename khi vào buffer
 vim.api.nvim_create_autocmd("BufEnter", {
   callback = function()
     cache.file = file_path_segment()
@@ -131,7 +133,7 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 -- ==================
--- Renderer
+-- Main renderer
 -- ==================
 function Statusline()
   local mode = mode_segment()
@@ -139,11 +141,11 @@ function Statusline()
   local items = {
     mode,
     cache.git,
-    "%<%#StatusLineFile# " .. cache.file .. " %*",
+    "%<%#StatusLineFile#" .. cache.file .. " %*",
     "%=",
     cache.diag,
-    "%#StatusLineFileinfo# " .. ft .. " %*",
-    "%#StatusLine# %p%% %*",
+    "%#StatusLineFileinfo# " .. ft .. "%*",
+    "%#StatusLinePercent# %p%% %*",
   }
   return join_nonempty(items, " ")
 end
