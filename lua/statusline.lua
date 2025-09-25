@@ -1,59 +1,25 @@
 -- lua/statusline.lua
+local M = {}
+local cache = { git = "", diag = "", file = "" }
 
--- Git branch + diff
-local function git_sign_with_diff()
-  local dict = vim.b.gitsigns_status_dict
-  if not dict or not dict.head or dict.head == "" then
-    return "" -- Không có branch => không hiện gì cả
-  end
+local function hl(group, text)
+  return "%#" .. group .. "#" .. text .. "%*"
+end
 
-  local parts = { " " .. dict.head }
-
-  for _, key in ipairs { "added", "changed", "removed" } do
-    local val = dict[key]
-    if val and val > 0 then
-      local hl = ({ added = "GitSignsAdd", changed = "GitSignsChange", removed = "GitSignsDelete" })[key]
-      local sign = ({ added = "+", changed = "~", removed = "-" })[key]
-      table.insert(parts, "%#" .. hl .. "#" .. sign .. val .. "%*")
+local function join_nonempty(parts, sep)
+  local res = {}
+  sep = sep or " "
+  for _, p in ipairs(parts) do
+    if p and p ~= "" then
+      table.insert(res, p)
     end
   end
-
-  return table.concat(parts, " ")
+  return table.concat(res, sep)
 end
 
-local function get_relative_path()
-  local filename = vim.fn.fnamemodify(vim.fn.expand "%:p", ":.")
-  if #filename > 40 then
-    filename = LazyVim.short_path(filename)
-  end
-  return filename
-end
-
--- Diagnostics
-local function diagnostics_summary()
-  if not vim.diagnostic.is_enabled() then
-    return ""
-  end
-  local counts = {}
-  for sev, char in pairs { ERROR = "E", WARN = "W", HINT = "H", INFO = "I" } do
-    counts[char] = #vim.diagnostic.get(0, { severity = vim.diagnostic.severity[sev] })
-  end
-
-  local parts = {}
-  for sev, hl in pairs {
-    E = "StatusLineDiagError",
-    W = "StatusLineDiagWarn",
-    H = "StatusLineDiagHint",
-    I = "StatusLineDiagInfo",
-  } do
-    if counts[sev] > 0 then
-      table.insert(parts, "%#" .. hl .. "#" .. sev .. counts[sev] .. "%*")
-    end
-  end
-  return table.concat(parts, " ")
-end
-
--- Mode highlight
+-- ==================
+-- Segments
+-- ==================
 local mode_map = {
   n = { "NORMAL", "StatusLineNormal" },
   i = { "INSERT", "StatusLineInsert" },
@@ -64,76 +30,124 @@ local mode_map = {
   c = { "COMMAND", "StatusLineCommand" },
 }
 
-local function mode_info()
+local function mode_segment()
   local m = vim.api.nvim_get_mode().mode
-  local entry = mode_map[m]
-  return (entry and entry[1] or m), (entry and entry[2] or "StatusLine")
+  local e = mode_map[m] or { m, "StatusLine" }
+  local label, group = e[1], e[2]
+  return hl(group, " " .. label .. " ")
 end
 
--- Safe filetype string
-local function get_filetype()
+local function git_segment()
+  local g = vim.b.gitsigns_status_dict
+  if not g or not g.head or g.head == "" then
+    return ""
+  end
+  local parts = { " " .. g.head }
+  if g.added and g.added > 0 then
+    table.insert(parts, hl("GitSignsAdd", "+" .. g.added))
+  end
+  if g.changed and g.changed > 0 then
+    table.insert(parts, hl("GitSignsChange", "~" .. g.changed))
+  end
+  if g.removed and g.removed > 0 then
+    table.insert(parts, hl("GitSignsDelete", "-" .. g.removed))
+  end
+  return table.concat(parts, " ")
+end
+
+local function file_path_segment()
+  local name = vim.fn.fnamemodify(vim.fn.expand "%:p", ":.")
+  if name == "" then
+    name = "[No Name]"
+  end
+  if #name > 40 and LazyVim and LazyVim.short_path then
+    name = LazyVim.short_path(name)
+  end
+  return name
+end
+
+local function diagnostics_segment()
+  if not vim.diagnostic.is_enabled() then
+    return ""
+  end
+  local parts = {}
+  local sevmap = {
+    { vim.diagnostic.severity.ERROR, "E", "StatusLineDiagError" },
+    { vim.diagnostic.severity.WARN, "W", "StatusLineDiagWarn" },
+    { vim.diagnostic.severity.INFO, "I", "StatusLineDiagInfo" },
+    { vim.diagnostic.severity.HINT, "H", "StatusLineDiagHint" },
+  }
+  for _, s in ipairs(sevmap) do
+    local count = #vim.diagnostic.get(0, { severity = s[1] })
+    if count > 0 then
+      table.insert(parts, hl(s[3], s[2] .. count))
+    end
+  end
+  return table.concat(parts, " ")
+end
+
+local function filetype_segment()
   local ft = vim.bo.filetype
   if ft == "" then
     return ""
   end
-  local ok, icons = pcall(require, "mini.icons")
-  if ok and icons.get then
-    return (icons.get("filetype", ft) or "") .. " " .. ft
-  end
-  return ft
+  local icon = ""
+  pcall(function()
+    local icons = require "mini.icons"
+    icon = icons.get("filetype", ft) or ""
+  end)
+  return (icon ~= "" and icon .. " " or "") .. ft
 end
 
-local function join_nonempty(tbl, sep)
-  local result = {}
-  for _, v in ipairs(tbl) do
-    if v and v ~= "" then
-      table.insert(result, v)
-    end
-  end
-  return table.concat(result, sep or " ")
-end
+-- ==================
+-- Cache updates
+-- ==================
+-- cache git khi BufEnter, BufWritePost hoặc khi Gitsigns update
+vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost" }, {
+  callback = function()
+    cache.git = git_segment()
+  end,
+})
 
--- Build statusline
+vim.api.nvim_create_autocmd("User", {
+  pattern = "GitSignsUpdate",
+  callback = function()
+    cache.git = git_segment()
+  end,
+})
+
+-- cache diagnostics khi thay đổi
+vim.api.nvim_create_autocmd("DiagnosticChanged", {
+  callback = function()
+    cache.diag = diagnostics_segment()
+  end,
+})
+
+-- cache filename khi vào buffer
+vim.api.nvim_create_autocmd("BufEnter", {
+  callback = function()
+    cache.file = file_path_segment()
+  end,
+})
+
+-- ==================
+-- Renderer
+-- ==================
 function Statusline()
-  local m, hl = mode_info()
+  local mode = mode_segment()
+  local ft = filetype_segment()
   local items = {
-    "%#" .. hl .. "# " .. m .. " %*",
-    git_sign_with_diff(),
-    "%<%#StatusLineFile# " .. get_relative_path() .. " %*",
+    mode,
+    cache.git,
+    "%<%#StatusLineFile# " .. cache.file .. " %*",
     "%=",
-    diagnostics_summary(),
-    "%#StatusLineFileinfo# " .. get_filetype() .. " %*",
-    "%#" .. hl .. "# %p%% %*",
+    cache.diag,
+    "%#StatusLineFileinfo# " .. ft .. " %*",
+    "%#StatusLine# %p%% %*",
   }
   return join_nonempty(items, " ")
 end
 
 vim.o.statusline = "%!v:lua.Statusline()"
 
-local hl = vim.api.nvim_set_hl
-local p = LazyVim.icons.palette
-
-local status_hl = {
-  StatusLine = { fg = p.light_08, bg = p.grey_02 },
-  StatusLineNC = { fg = p.grey_05, bg = p.grey_02 },
-
-  StatusLineNormal = { fg = p.dark_06, bg = p.blue_21, bold = true },
-  StatusLineInsert = { fg = p.dark_06, bg = p.green_10, bold = true },
-  StatusLineVisual = { fg = p.dark_06, bg = p.purple_03, bold = true },
-  StatusLineReplace = { fg = p.dark_06, bg = p.red_06, bold = true },
-  StatusLineCommand = { fg = p.dark_06, bg = p.yellow_07, bold = true },
-
-  StatusLineFile = { fg = p.light_08, bg = p.grey_02 },
-  StatusLineFileinfo = { fg = p.light_05, bg = p.grey_03 },
-
-  StatusLineGit = { fg = p.orange_01, bg = p.grey_02 },
-
-  StatusLineDiagError = { fg = p.red_06, bg = p.grey_02 },
-  StatusLineDiagWarn = { fg = p.yellow_07, bg = p.grey_02 },
-  StatusLineDiagInfo = { fg = p.blue_21, bg = p.grey_02 },
-  StatusLineDiagHint = { fg = p.green_08, bg = p.grey_02 },
-}
-
-for name, opts in pairs(status_hl) do
-  hl(0, name, opts)
-end
+return M

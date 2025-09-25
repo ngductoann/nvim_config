@@ -1,5 +1,26 @@
 return {
   {
+    "echasnovski/mini.bufremove",
+    version = false,
+    keys = {
+      {
+        "<leader>bd",
+        function()
+          require("mini.bufremove").delete(0, false)
+        end,
+        desc = "Delete Buffer",
+      },
+      {
+        "<leader>bD",
+        function()
+          require("mini.bufremove").delete(0, true)
+        end,
+        desc = "Delete Buffer (Force)",
+      },
+    },
+  },
+
+  {
     "ibhagwan/fzf-lua",
     cmd = "FzfLua",
     init = require("configs.editor.fzf-lua").init,
@@ -29,13 +50,13 @@ return {
 
   -- Finds and lists all of the TODO, HACK, BUG, etc comment
   -- in your project and loads them into a browsable list.
-  {
-    "folke/todo-comments.nvim",
-    cmd = { "TodoTrouble", "TodoTelescope" },
-    event = "User FilePost",
-    opts = require("configs.editor.todo-comments").opts,
-    keys = require("configs.editor.todo-comments").keys,
-  },
+  -- {
+  --   "folke/todo-comments.nvim",
+  --   cmd = { "TodoTrouble", "TodoTelescope" },
+  --   event = "User FilePost",
+  --   opts = require("configs.editor.todo-comments").opts,
+  --   keys = require("configs.editor.todo-comments").keys,
+  -- },
 
   {
     "nvim-mini/mini.files",

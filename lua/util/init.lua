@@ -364,62 +364,85 @@ function M.short_path(path)
   return table.concat(parts, "/")
 end
 
---- Delete a buffer safely (like mini.bufremove)
----@param bufnr number|nil Buffer number, default = current
+--- Xóa buffer và detach LSP/Copilot chỉ cho buffer đó
+---@param bufnr number|nil Buffer number (default = current)
 ---@param opts table|nil { force = boolean }
 function M.delete(bufnr, opts)
   opts = opts or {}
   bufnr = bufnr or vim.api.nvim_get_current_buf()
-
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
 
-  -- Nếu buffer đã modified thì hỏi confirm trừ khi force = true
+  -- Nếu buffer đã modified thì confirm trừ khi force = true
   if vim.bo[bufnr].modified and not opts.force then
     vim.ui.input({ prompt = "Buffer modified. Force delete? (y/N) " }, function(input)
       if input and input:lower() == "y" then
-        pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+        M.delete(bufnr, { force = true })
       end
     end)
-  else
-    -- Đảm bảo mọi window hiển thị buffer này sẽ chuyển sang current
-    local cur = vim.api.nvim_get_current_buf()
-    for _, win in ipairs(vim.api.nvim_list_wins()) do
-      if vim.api.nvim_win_get_buf(win) == bufnr then
-        vim.api.nvim_win_set_buf(win, cur)
+    return
+  end
+
+  -- Detach LSP clients chỉ cho buffer này
+  for _, client in pairs(vim.lsp.get_clients { bufnr = bufnr }) do
+    local still_attached = false
+    for b, _ in pairs(client.attached_buffers or {}) do
+      if b ~= bufnr and vim.api.nvim_buf_is_valid(b) then
+        still_attached = true
+        break
       end
     end
-    pcall(vim.api.nvim_buf_delete, bufnr, { force = opts.force or false })
+    if still_attached then
+      pcall(vim.lsp.buf_detach_client, bufnr, client.id)
+    end
   end
+
+  -- Nếu có Copilot thì detach riêng
+  local ok, copilot = pcall(require, "copilot.client")
+  if ok and copilot.detach then
+    pcall(copilot.detach, bufnr)
+  end
+
+  -- Đổi sang buffer fallback trong mọi window đang hiển thị bufnr
+  local fallback = nil
+  for _, b in ipairs(vim.api.nvim_list_bufs()) do
+    if b ~= bufnr and vim.api.nvim_buf_is_loaded(b) then
+      fallback = b
+      break
+    end
+  end
+  if not fallback then
+    vim.cmd "noautocmd enew"
+    fallback = vim.api.nvim_get_current_buf()
+  end
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_get_buf(win) == bufnr then
+      pcall(vim.api.nvim_win_set_buf, win, fallback)
+    end
+  end
+
+  -- Xóa buffer
+  pcall(vim.cmd, string.format("noautocmd %sbdelete %d", opts.force and "!" or "", bufnr))
 end
 
---- Delete all other buffers, keep current
+--- Xóa tất cả buffer khác, giữ buffer hiện tại
 function M.delete_others()
   local cur = vim.api.nvim_get_current_buf()
-  for _, win in ipairs(vim.api.nvim_list_wins()) do
-    vim.api.nvim_win_set_buf(win, cur)
-  end
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if buf ~= cur and vim.api.nvim_buf_is_loaded(buf) then
-      M.delete(buf)
+    if buf ~= cur and vim.api.nvim_buf_is_valid(buf) then
+      M.delete(buf, { force = true })
     end
   end
 end
 
---- Delete all buffers and keep one empty window
+--- Xóa toàn bộ buffer, giữ lại 1 buffer trống
 function M.delete_all()
-  vim.cmd "enew"
-  local cur_win = vim.api.nvim_get_current_win()
-  for _, win in ipairs(vim.api.nvim_list_wins()) do
-    if win ~= cur_win then
-      vim.api.nvim_win_close(win, true)
-    end
-  end
-  local cur_buf = vim.api.nvim_get_current_buf()
+  vim.cmd "noautocmd enew"
+  local cur = vim.api.nvim_get_current_buf()
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if buf ~= cur_buf and vim.api.nvim_buf_is_loaded(buf) then
-      M.delete(buf)
+    if buf ~= cur and vim.api.nvim_buf_is_valid(buf) then
+      M.delete(buf, { force = true })
     end
   end
 end

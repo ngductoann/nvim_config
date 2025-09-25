@@ -99,7 +99,11 @@ return {
 
     keymap = {
       preset = "enter",
-      ["<C-y>"] = { "select_and_accept" },
+      ["<CR>"] = {
+        "select_and_accept", -- khi có menu → chọn gợi ý, không xuống dòng
+        "fallback", -- khi không có menu → xuống dòng
+      },
+      ["<C-y>"] = { "select_and_accept" }, -- giữ thêm nếu bạn muốn phím tắt accept riêng
       ["<Tab>"] = {
         LazyVim.cmp.map { "snippet_forward", "ai_accept" },
         "fallback",

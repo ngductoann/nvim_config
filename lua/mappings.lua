@@ -108,17 +108,50 @@ map("n", "<S-h>", "<cmd>bprevious<CR>", { desc = "buffer goto prev" })
 map("n", "[b", "<cmd>-b<CR>", { desc = "buffer move prev" })
 map("n", "]b", "<cmd>+b<CR>", { desc = "buffer move next" })
 
+local bufremove = require "mini.bufremove"
+
+-- Lấy danh sách buffer "listed"
+local function listed_buffers()
+  return vim.tbl_filter(function(buf)
+    return vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buflisted
+  end, vim.api.nvim_list_bufs())
+end
+
+-- Xoá buffer hiện tại
+local function delete_current(force)
+  bufremove.delete(0, force or false)
+end
+
+-- Xoá tất cả buffer trừ buffer hiện tại
+local function delete_other(force)
+  local cur = vim.api.nvim_get_current_buf()
+  for _, buf in ipairs(listed_buffers()) do
+    if buf ~= cur then
+      bufremove.delete(buf, force or false)
+    end
+  end
+end
+
+-- Xoá toàn bộ buffer
+local function delete_all(force)
+  for _, buf in ipairs(listed_buffers()) do
+    bufremove.delete(buf, force or false)
+  end
+end
+
+-- Mapping ví dụ
 map("n", "<leader>bd", function()
-  LazyVim.delete(0)
-end, { desc = "buffer close" })
-
+  delete_current(false)
+end, { desc = "Delete buffer" })
+map("n", "<leader>bD", function()
+  delete_current(true)
+end, { desc = "Delete buffer (force)" })
 map("n", "<leader>bo", function()
-  LazyVim.delete_others()
-end, { desc = "close other buffers + windows" })
-
-map("n", "<leader>bO", function()
-  LazyVim.delete_all()
-end, { desc = "close all buffers, keep one empty window" })
+  delete_other(false)
+end, { desc = "Delete other buffers" })
+map("n", "<leader>ba", function()
+  delete_all(false)
+end, { desc = "Delete all buffers" })
 
 -- Comment
 map("n", "<leader>/", "gcc", { desc = "toggle comment", remap = true })

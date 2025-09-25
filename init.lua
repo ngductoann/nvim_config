@@ -17,7 +17,7 @@ _G.LazyVim.icons = require "icons"
 -- load plugins
 require("lazy").setup({
   { import = "plugins" },
-  { import = "langs" },
+  -- { import = "langs" },
 }, lazy_config)
 
 require "mappings"
